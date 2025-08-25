@@ -3,8 +3,6 @@ import pandas as pd
 from PIL import Image
 from utils.predictor import predict_image
 import plotly.express as px
-from streamlit_webrtc import webrtc_streamer, WebRtcMode
-import av
 from utils.navigation import sidebar_nav
 
 # 1. Konfigurasi Halaman & Gaya Kustom
@@ -88,49 +86,36 @@ st.markdown("---")
 st.markdown("Hai! 👋 Aplikasi ini dirancang untuk membantu Anda memprediksi tingkat kesegaran ikan hanya dengan mengunggah gambar mata ikan. Teknologi *deep learning* canggih di balik layar akan menganalisis gambar dan memberikan hasilnya dalam sekejap.")
 st.markdown("---")
 
-# ... (Sisa kode app.py tetap sama seperti versi yang terakhir kali berhasil) ...
+# --- Bagian Input ---
 col_upload, col_result = st.columns([0.4, 0.6])
 
+# Inisialisasi variabel untuk gambar yang diunggah/diambil
 image = None
+uploaded_file = None
+camera_photo = None
+
 with col_upload:
     st.subheader("Pilih Input Gambar")
-    input_method = st.radio("Metode Input:", ("Unggah Gambar", "Ambil Foto dari Kamera"))
-    st.markdown("---")
-
-    if input_method == "Unggah Gambar":
+    
+    tab_file_uploader, tab_camera_input = st.tabs(["Unggah Gambar", "Ambil Foto dari Kamera"])
+    
+    with tab_file_uploader:
         uploaded_file = st.file_uploader(
             "Pilih gambar mata ikan...",
             type=["jpg", "jpeg", "png"],
             help="Pastikan gambar fokus pada mata ikan untuk hasil terbaik."
         )
-        if uploaded_file is not None:
-            image = Image.open(uploaded_file)
-            st.image(image, caption='Gambar Ikan yang Diunggah.', use_container_width=True)
     
-    elif input_method == "Ambil Foto dari Kamera":
-        st.info("Kamera aktif. Silakan ambil foto.")
-        webrtc_ctx = webrtc_streamer(
-            key="webrtc",
-            mode=WebRtcMode.SENDRECV,
-            video_receiver_size=400,
-            rtc_configuration={
-                "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
-            },
-            media_stream_constraints={"video": True, "audio": False}
-        )
-        if webrtc_ctx.video_receiver:
-            try:
-                video_frame = webrtc_ctx.video_receiver.get_frame(timeout=1.0)
-                if video_frame:
-                    image = video_frame.to_image()
-                    st.session_state.captured_image = image
-            except av.AVError:
-                st.warning("Gagal mendapatkan frame dari kamera. Coba lagi.")
-
-if 'captured_image' in st.session_state and st.session_state.captured_image is not None and input_method == "Ambil Foto dari Kamera":
-    image = st.session_state.captured_image
-    with col_upload:
-        st.image(image, caption='Gambar dari Kamera.', use_container_width=True)
+    with tab_camera_input:
+        camera_photo = st.camera_input("Ambil foto")
+    
+    # Menentukan gambar mana yang akan diproses
+    if uploaded_file is not None:
+        image = Image.open(uploaded_file)
+        st.image(image, caption='Gambar Ikan yang Diunggah.', use_container_width=True)
+    elif camera_photo is not None:
+        image = Image.open(camera_photo)
+        st.image(image, caption='Foto dari Kamera.', use_container_width=True)
 
 
 with col_result:
@@ -142,7 +127,7 @@ with col_result:
         confidence = float(confidence_percentage)
 
         if predicted_label == "Segar":
-            st.markdown(f"<div class='prediction-box-fresh'><h3>✅ Segar!</h3><p>Model sangat yakin (<strong>{confidence_percentage}%</strong>) bahwa ikan ini segar.</p></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='prediction-box-fresh'><h3>✅ Segar!</h3><p>Model sangat yakin (<strong>{confidence_percentage:.2f}%</strong>) bahwa ikan ini segar.</p></div>", unsafe_allow_html=True)
             if confidence > 90:
                 suggestion = "Selamat! Ikan ini super segar dan berkualitas tinggi. Cocok untuk segera diolah atau disimpan dengan baik."
             elif confidence >= 80:
@@ -151,7 +136,7 @@ with col_result:
                 suggestion = "Ikan ini cukup segar, namun disarankan untuk segera dikonsumsi untuk rasa dan kualitas terbaik. Perhatikan juga kondisi fisik ikan secara manual."
             st.markdown(f"<div class='suggestion-box'><strong>💡 Saran:</strong> {suggestion}</div>", unsafe_allow_html=True)
         else:
-            st.markdown(f"<div class='prediction-box-nonfresh'><h3>❌ Tidak Segar.</h3><p>Model mendeteksi (<strong>{confidence_percentage}%</strong>) bahwa ikan ini tidak segar.</p></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='prediction-box-nonfresh'><h3>❌ Tidak Segar.</h3><p>Model mendeteksi (<strong>{confidence_percentage:.2f}%</strong>) bahwa ikan ini tidak segar.</p></div>", unsafe_allow_html=True)
             suggestion = "Demi keamanan dan kesehatan Anda, sangat disarankan untuk tidak mengonsumsi ikan ini."
             st.markdown(f"<div class='suggestion-box'><strong>⚠️ Saran:</strong> {suggestion}</div>", unsafe_allow_html=True)
 
@@ -165,10 +150,10 @@ with col_result:
                      labels={'Probabilitas': 'Tingkat Keyakinan', 'Kelas': 'Kategori'},
                      title="Probabilitas Kesegaran")
         fig.update_layout(xaxis_title="Kategori", yaxis_title="Tingkat Keyakinan",
-                          dragmode=False)
+                         dragmode=False)
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("Silakan unggah gambar atau ambil foto di sebelah kiri untuk melihat hasil analisis.")
-
+    
 st.markdown("---")
 st.markdown("Dibuat dengan ❤️ menggunakan Streamlit, TensorFlow Lite, dan banyak semangat!")

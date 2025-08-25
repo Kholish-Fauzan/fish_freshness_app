@@ -2,4 +2,4 @@ streamlit==1.46.1
 tensorflow
 plotly
 numpy
-streamlit_webrtc
+Pillow
