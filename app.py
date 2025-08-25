@@ -124,10 +124,12 @@ with col_result:
             predicted_label, confidence_percentage, confidence_scores = predict_image(image)
 
         st.header("✨ Hasil Analisis ✨")
+        
+        # Perbaiki baris ini: pastikan confidence adalah float sebelum menampilkan
         confidence = float(confidence_percentage)
 
         if predicted_label == "Segar":
-            st.markdown(f"<div class='prediction-box-fresh'><h3>✅ Segar!</h3><p>Model sangat yakin (<strong>{confidence_percentage:.2f}%</strong>) bahwa ikan ini segar.</p></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='prediction-box-fresh'><h3>✅ Segar!</h3><p>Model sangat yakin (<strong>{confidence:.2f}%</strong>) bahwa ikan ini segar.</p></div>", unsafe_allow_html=True)
             if confidence > 90:
                 suggestion = "Selamat! Ikan ini super segar dan berkualitas tinggi. Cocok untuk segera diolah atau disimpan dengan baik."
             elif confidence >= 80:
@@ -136,7 +138,7 @@ with col_result:
                 suggestion = "Ikan ini cukup segar, namun disarankan untuk segera dikonsumsi untuk rasa dan kualitas terbaik. Perhatikan juga kondisi fisik ikan secara manual."
             st.markdown(f"<div class='suggestion-box'><strong>💡 Saran:</strong> {suggestion}</div>", unsafe_allow_html=True)
         else:
-            st.markdown(f"<div class='prediction-box-nonfresh'><h3>❌ Tidak Segar.</h3><p>Model mendeteksi (<strong>{confidence_percentage:.2f}%</strong>) bahwa ikan ini tidak segar.</p></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='prediction-box-nonfresh'><h3>❌ Tidak Segar.</h3><p>Model mendeteksi (<strong>{confidence:.2f}%</strong>) bahwa ikan ini tidak segar.</p></div>", unsafe_allow_html=True)
             suggestion = "Demi keamanan dan kesehatan Anda, sangat disarankan untuk tidak mengonsumsi ikan ini."
             st.markdown(f"<div class='suggestion-box'><strong>⚠️ Saran:</strong> {suggestion}</div>", unsafe_allow_html=True)
 
@@ -156,4 +158,4 @@ with col_result:
         st.info("Silakan unggah gambar atau ambil foto di sebelah kiri untuk melihat hasil analisis.")
     
 st.markdown("---")
-st.markdown("Dibuat dengan ❤️ menggunakan Streamlit, TensorFlow Lite, dan banyak semangat!")
+st.markdown("Dibuat oleh Kholish menggunakan Streamlit, TensorFlow Lite, dan dengan semangat yang tak pernah pudar!")
